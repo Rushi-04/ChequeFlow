@@ -1,0 +1,10 @@
+*.png
+*.pdf
+*.db
+*.pyc
+__pycache__
+outputs
+outputs_v2
+insert_data.py
+debug_drive.py
+*.log
