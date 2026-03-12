@@ -16,6 +16,8 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         employer_name TEXT,
         employer_address TEXT,
+        employer_street TEXT,
+        employer_city_state_zip TEXT,
         date TEXT,
         ssn TEXT,
         bank_info TEXT,
@@ -26,8 +28,14 @@ def init_db():
         cheque_number TEXT,
         transit_number TEXT,
         account_number TEXT,
-        micr_line TEXT,
-        signature_path TEXT
+        signature_path TEXT,
+        memo TEXT,
+        gross_amt TEXT,
+        fed_wh TEXT,
+        hw_ins TEXT,
+        voucher_id TEXT,
+        routing_number TEXT,
+        micr_serial TEXT
     )
     ''')
     
@@ -36,6 +44,8 @@ def init_db():
         (
             "EMPLOYER - TEAMSTERS LOCAL NOS. 175 & 505\nPENSION TRUST FUND",
             "",
+            "269 Staunton Ave SW Ste 200",
+            "South Charleston WV 25303",
             "1/28/25",
             "782-23-8626",
             "UNITED BANK\nCHARLESTON, WEST VIRGINIA",
@@ -45,18 +55,25 @@ def init_db():
             "*** Five Thousand Nine Hundred Forty Nine Dollars And 00/100***",
             "01389587",
             "051900395",
-            "043370452",
-            "01389587 051900395 043370452", # Example MICR structure
-            "assets/signatures/sample_sig.png"
+            "04337",
+            "https://drive.google.com/file/d/1ligjpsMQSSa5KTJEReBohw5d4fHapa3M/view?usp=sharing",
+            "BP 4/24-01/25",
+            "$7,626.90",
+            "$1,677.90",
+            "$.00",
+            "J84",
+            "051900395",
+            "0452"
         )
     ]
     
     cursor.executemany('''
     INSERT INTO cheques (
-        employer_name, employer_address, date, ssn, bank_info, 
-        payee_name, payee_address, amount, amount_words, 
-        cheque_number, transit_number, account_number, micr_line, signature_path
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        employer_name, employer_address, employer_street, employer_city_state_zip, 
+        date, ssn, bank_info, payee_name, payee_address, amount, amount_words, 
+        cheque_number, transit_number, account_number, signature_path,
+        memo, gross_amt, fed_wh, hw_ins, voucher_id, routing_number, micr_serial
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ''', sample_data)
     
     conn.commit()
