@@ -2,83 +2,52 @@ import sqlite3
 import os
 
 def init_db():
-    db_path = "cheques.db"
+    # Define absolute path for the database in the project root
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(base_dir, "cheques.db")
+    print(f"DEBUG: Initializing database at {db_path}")
     
-    # Remove existing DB if it exists for fresh start
-    if os.path.exists(db_path):
-        os.remove(db_path)
-        
+    # Optional: Keep existing data or start fresh?
+    # For sync purposes, we want the schema to be consistent.
+    # User said "store all processed/enriched rows into your local table first"
+    
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
+    
+    # We'll drop and recreate to ensure schema matches the new requirements perfectly
+    cursor.execute('DROP TABLE IF EXISTS cheques')
     
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS cheques (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        employer_name TEXT,
-        employer_address TEXT,
-        employer_street TEXT,
-        employer_city_state_zip TEXT,
+        cheque_number TEXT UNIQUE,
         date TEXT,
         ssn TEXT,
-        bank_info TEXT,
         payee_name TEXT,
         payee_address TEXT,
         amount REAL,
         amount_words TEXT,
-        cheque_number TEXT,
-        transit_number TEXT,
-        account_number TEXT,
-        signature_path TEXT,
-        memo TEXT,
-        gross_amt TEXT,
-        fed_wh TEXT,
-        hw_ins TEXT,
-        voucher_id TEXT,
+        
+        claim_number TEXT,
+        status TEXT,
+        payment_mode TEXT,
+        bkcode TEXT,
+        
+        employer_name TEXT,
+        employer_street TEXT,
+        employer_city_state_zip TEXT,
+        bank_info TEXT,
         routing_number TEXT,
-        micr_serial TEXT
+        micr_account_tail TEXT,
+        void_days INTEGER DEFAULT 90,
+        
+        signature_path TEXT
     )
     ''')
     
-    # Sample data based on the image provided
-    sample_data = [
-        (
-            "EMPLOYER - TEAMSTERS LOCAL NOS. 175 & 505\nPENSION TRUST FUND",
-            "",
-            "269 Staunton Ave SW Ste 200",
-            "South Charleston WV 25303",
-            "1/28/25",
-            "782-23-8626",
-            "UNITED BANK\nCHARLESTON, WEST VIRGINIA",
-            "CARRIE LARCH",
-            "5907 MELWOOD DR\nCHARLESTON, WV 25313",
-            5949.00,
-            "*** Five Thousand Nine Hundred Forty Nine Dollars And 00/100***",
-            "01389587",
-            "051900395",
-            "04337",
-            "https://drive.google.com/file/d/1ligjpsMQSSa5KTJEReBohw5d4fHapa3M/view?usp=sharing",
-            "BP 4/24-01/25",
-            "$7,626.90",
-            "$1,677.90",
-            "$.00",
-            "J84",
-            "051900395",
-            "0452"
-        )
-    ]
-    
-    cursor.executemany('''
-    INSERT INTO cheques (
-        employer_name, employer_address, employer_street, employer_city_state_zip, 
-        date, ssn, bank_info, payee_name, payee_address, amount, amount_words, 
-        cheque_number, transit_number, account_number, signature_path,
-        memo, gross_amt, fed_wh, hw_ins, voucher_id, routing_number, micr_serial
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ''', sample_data)
-    
     conn.commit()
     conn.close()
-    print("Database initialized with sample data.")
+    print("Local database schema initialized for enriched data.")
 
 if __name__ == "__main__":
     init_db()

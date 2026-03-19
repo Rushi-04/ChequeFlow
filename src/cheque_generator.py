@@ -36,7 +36,6 @@ class ChequeGenerator:
         self._draw_cheque(c, data, offset_y=0)
         
         c.save()
-        print(f"Successfully generated: {filename}")
         return filename
 
     def _draw_remittance_advice(self, c, data):
@@ -79,7 +78,7 @@ class ChequeGenerator:
         ref_x = 7.8 * inch
         c.drawRightString(ref_x, 9.1 * inch, f" {data.get('date', '')}")
         c.drawRightString(ref_x, 8.95 * inch, f"CHECK NO. : {data.get('cheque_number', '')}")
-        c.drawRightString(ref_x, 8.8 * inch, f" {data.get('voucher_id', '')}")
+        c.drawRightString(ref_x, 8.8 * inch, f" {data.get('bkcode', '')}")
         # Masked SSN
         ssn = data.get('ssn', '')
         masked_ssn = "XXXXX" + ssn[-4:] if len(ssn) >= 4 else ssn
@@ -173,27 +172,44 @@ class ChequeGenerator:
         c.setStrokeColorRGB(0, 0, 0)
 
         # Employer Info - Aligned at the same level as Cheque Number
-        c.setFont("Helvetica-Bold", 10)
+        # Employer Info - Aligned at the same level as Cheque Number
         y_emp = oy(3.15 * inch)
         # Handle multi-line employer name properly
-        for line in data['employer_name'].split('\n'):
+        lines = data['employer_name'].split('\n')
+        for i, line in enumerate(lines):
             if line:
-                c.drawString(0.5 * inch, y_emp, line)
-                y_emp -= 0.12 * inch
+                if i == 0:
+                    c.setFont("Helvetica-Bold", 10)
+                    c.drawString(0.5 * inch, y_emp, line)
+                    y_emp -= 0.12 * inch
+                else:
+                    c.setFont("Helvetica-Bold", 7.0) # Smaller font for subsequent lines
+                    c.drawString(0.5 * inch, y_emp, line)
+                    y_emp -= 0.1 * inch
 
-        # Employer address (if any) starts after the name
+        # Employer address starts after the name
         c.setFont("Helvetica", 8)
         y_addr = y_emp - 0.05 * inch
-        for line in data['employer_address'].split('\n'):
-            if line:
-                c.drawString(0.5 * inch, y_addr, line)
-                y_addr -= 0.12 * inch
+        
+        # # New split fields from Phase 5 enrichment
+        # street = data.get('employer_street', '').strip()
+        # if street:
+        #     c.drawString(0.5 * inch, y_addr, street)
+        #     y_addr -= 0.12 * inch
+            
+        # city_zip = data.get('employer_city_state_zip', '').strip()
+        # if city_zip:
+        #     c.drawString(0.5 * inch, y_addr, city_zip)
+        #     y_addr -= 0.12 * inch
 
         # --- Date & SSN Table (Refined) ---
+        # table_w, table_h = 4.5 * inch, 0.5 * inch
+        # col1_w = 2.0 * inch
+        # header_h = 0.15 * inch
         table_x, table_y = 0.5 * inch, oy(2.4 * inch)
-        table_w, table_h = 4.5 * inch, 0.5 * inch
-        col1_w = 2.0 * inch
-        header_h = 0.15 * inch
+        table_w, table_h = 2.8 * inch, 0.42 * inch # Made table smaller overall
+        col1_w = 0.9 * inch # Date column width
+        header_h = 0.14 * inch
 
         # Main border
         c.setLineWidth(0.8)
@@ -203,25 +219,48 @@ class ChequeGenerator:
         # Column separator
         c.line(table_x + col1_w, table_y, table_x + col1_w, table_y + table_h)
         
+        # Headers (Centered)
         c.setFont("Helvetica-Bold", 7)
-        c.drawString(table_x + 0.05 * inch, table_y + table_h - header_h + 0.03 * inch, "DATE")
-        c.drawString(table_x + col1_w + 0.05 * inch, table_y + table_h - header_h + 0.03 * inch, "SOCIAL SECURITY NUMBER")
-        
-        c.setFont("Courier-Bold", 12)
-        # Aligned from the start (left) as requested
-        c.drawString(table_x + 0.15 * inch, table_y + 0.08 * inch, data['date'])
-        c.drawString(table_x + col1_w + 0.15 * inch, table_y + 0.08 * inch, data['ssn'])
+        c.drawCentredString(table_x + col1_w / 2, table_y + table_h - 0.1 * inch, "DATE")
+        c.drawCentredString(table_x + col1_w + (table_w - col1_w) / 2, table_y + table_h - 0.1 * inch, "SOCIAL SECURITY NUMBER")
 
+        # Table data (Date, SSN) - Centered and Helvetica for tighter spacing
+        c.setFont("Helvetica", 9)
+        date_str = data.get('date', '').replace(' ', '')
+        
+        ssn_raw = data.get('ssn', '')
+        masked_ssn = f"XXX-XX-{ssn_raw[-4:]}" if len(ssn_raw) >= 4 else ssn_raw
+        
+        # Reduced padding above by increasing the Y baseline slightly
+        data_y = table_y + 0.09 * inch 
+        
+        # Draw centered data
+        c.drawCentredString(table_x + col1_w / 2, data_y, date_str)
+        c.drawCentredString(table_x + col1_w + (table_w - col1_w) / 2, data_y, masked_ssn)
+        
         # Bank Info (Relatively smaller than information)
         c.setFont("Helvetica", 6.5) # Smaller as requested
         y_bank = oy(2.15 * inch)
-        for line in data['bank_info'].split('\n'):
-            c.drawString(0.6 * inch, y_bank, line)
-            y_bank -= 0.1 * inch
+        # for line in data['bank_info'].split('\n'):
+        #     c.drawString(0.6 * inch, y_bank, line)
+        #     y_bank -= 0.1 * inch
+
+        # Handle multi-line employer name properly
+        lines = data['bank_info'].split('\n')
+        for i, line in enumerate(lines):
+            if line:
+                if i == 0:
+                    c.setFont("Helvetica-Bold", 6.5) # Smaller as requested
+                    c.drawString(0.6 * inch, y_bank, line)
+                    y_bank -= 0.1 * inch
+                else:
+                    c.setFont("Helvetica-Bold", 6.5) # Smaller as requested
+                    c.drawString(0.6 * inch, y_bank, line)
+                    y_bank -= 0.1 * inch
 
         # Amount Words
         c.setFont("Courier", 11)
-        c.drawCentredString(width / 2, oy(1.7 * inch), data['amount_words'])
+        c.drawCentredString(width / 2, oy(1.85 * inch), data['amount_words'])
 
         # --- Amount Section (Centered Column) ---
         amount_center_x = 7.5 * inch
@@ -243,54 +282,80 @@ class ChequeGenerator:
         c.setLineWidth(1.0)
         c.rect(amount_center_x - box_w/2, oy(2.35 * inch), box_w, box_h)
         
-        c.setFont("Courier-Bold", 13)
+        c.setFont("Courier-Bold", 11)
         formatted_amount = f"${data['amount']:,.2f}"
-        c.drawCentredString(amount_center_x, oy(2.45 * inch), formatted_amount)
+        # Adjusted Y baseline from 2.45 to 2.51 inch to center vertically in the box
+        c.drawCentredString(amount_center_x, oy(2.51 * inch), formatted_amount)
         
-        # VOID AFTER 90 DAYS
+        # VOID AFTER {void_days} DAYS (Dynamic)
         c.setFont("Helvetica-Bold", 7)
-        c.drawCentredString(amount_center_x, oy(2.2 * inch), "VOID AFTER 90 DAYS")
+        void_days = data.get('void_days', 90)
+        c.drawCentredString(amount_center_x, oy(2.2 * inch), f"VOID AFTER {void_days} DAYS")
 
-        # Payee Info with Bullets (Bold and relatively smaller)
-        c.setFont("Helvetica-Bold", 7)
-        labels = [("PAY TO", 1.35), ("THE ORDER", 1.15), ("OF", 0.95)]
-        for label, y_pos in labels:
-            c.drawString(0.7 * inch, y_pos * inch, label)
-            c.drawCentredString(1.4 * inch, y_pos * inch, "*")
+        # --- Payee Info and Address Block ---
+        labels = ["PAY TO", "THE ORDER", "OF"]
+        # Convert all to uppercase as seen in typical cheque systems
+        payee_lines = [data.get('payee_name', '').upper()]
         
-        c.setFont("Courier", 11)
-        # payee name and address
-        c.drawString(1.7 * inch, oy(1.3 * inch), data['payee_name'])
-        y_payee_addr = oy(1.15 * inch)
-        for line in data['payee_address'].split('\n'):
-            c.drawString(1.7 * inch, y_payee_addr, line)
-            y_payee_addr -= 0.15 * inch
+        payee_addr = data.get('payee_address', '')
+        if payee_addr:
+            payee_lines.extend([line.upper() for line in payee_addr.split('\n') if line.strip()])
+            
+        y_payee = oy(1.35 * inch)
+        line_spacing = 0.16 * inch
+        
+        # Center of the labels block
+        label_center_x = 0.75 * inch
+        bullet_x = 1.2 * inch
+        text_x = 1.4 * inch
+        
+        # Always draw exactly 4 bullets based on reference
+        num_bullets = 4
+        num_lines = max(num_bullets, len(payee_lines))
+        
+        for i in range(num_lines):
+            # Draw center-aligned label block (pyramid form) in serif font
+            if i < len(labels):
+                c.setFont("Times-Bold", 6.5)
+                c.drawCentredString(label_center_x, y_payee, labels[i])
+            
+            # Draw circular bullet if within the 4 vertical dots requirement
+            if i < num_bullets:
+                radius = 1.2
+                # Increase the added value to lift the dots higher relative to the text baseline
+                bullet_y_offset = 7.0
+                c.circle(bullet_x, y_payee + bullet_y_offset, radius, fill=1, stroke=0)
+            
+            # Draw left-aligned payee text in monospaced font
+            if i < len(payee_lines):
+                c.setFont("Courier", 11)
+                # Add an offset to lift the payee text higher if desired
+                payee_text_y_offset = 7.0 
+                c.drawString(text_x, y_payee + payee_text_y_offset, payee_lines[i])
+                
+            y_payee -= line_spacing
 
         # Signature Line and MICR Line drawn first
-        c.line(5.5 * inch, oy(0.85 * inch), 8.1 * inch, oy(0.85 * inch))
+        # c.line(5.5 * inch, oy(0.85 * inch), 8.1 * inch, oy(0.85 * inch)) # Removed signature line as requested
         c.setFont("Helvetica-Bold", 14)
         c.drawString(5.5 * inch, oy(0.95 * inch), "") 
 
-        # --- MICR Line (US Standard Pattern) ---
-        c.setFont("MICR", 14)
-        
         # --- MICR Line (US Standard Pattern - Letter Mapping) ---
         c.setFont("MICR", 14)
         
-        # User verified pattern for E13B.ttf:
-        # A = Transit, B = On-Us
-        # Final Format: B{check}B A{routing}A {account}B{serial}B
-        cheque_no = str(data.get('cheque_number', ''))
-        routing_no = str(data.get('routing_number', data.get('transit_number', '')))
-        account_no = str(data.get('account_number', ''))
-        serial = str(data.get('micr_serial', ''))
+        # Build the string using the new pattern:
+        # C{cheque_no}C A{routing_no}A {processed_bkacct}C
+        # processed_bkacct = bkacct.rstrip('/').replace('-', 'D')
         
-        # Build the string using Letter Pattern A
-        # micr_string = f'B{cheque_no}B A{routing_no}A {account_no}B{serial}B'
-        micr_string = f'C{cheque_no}C A{routing_no}A {account_no}D{serial}C'
+        cheque_no = str(data.get('cheque_number', '')).strip()
+        routing_no = str(data.get('routing_number', '')).strip()
+        bkacct = str(data.get('micr_account_tail', '')).strip()
+        processed_bkacct = bkacct.rstrip('/').replace('-', 'D')
         
-        # Print the constructed MICR line
-        c.drawString(1.4 * inch, oy(0.4 * inch), micr_string)
+        micr_line = f"C{cheque_no}C A{routing_no}A {processed_bkacct}C"
+        
+        # Print the constructed MICR line (Centered horizontally)
+        c.drawCentredString(4.25 * inch, oy(0.4 * inch), micr_line)
 
         # --- DRAW SIGNATURE AT THE VERY END (For Visibility) ---
         sig_path = data.get('signature_path', '')
@@ -385,7 +450,7 @@ class ChequeGenerator:
         return
 
 if __name__ == "__main__":
-    # Test generation
+    # Test generation   
     gen = ChequeGenerator()
     test_data = {
         "employer_name": "EMPLOYER - TEAMSTERS LOCAL NOS. 175 & 505 PENSION TRUST FUND",

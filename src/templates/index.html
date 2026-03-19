@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChequeFlow | Review Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        :root {
+            --primary: #0d9488; 
+            --primary-hover: #0f766e;
+            --primary-light: #ccfbf1;
+            --secondary: #64748b;
+            --bg: #f8fafc; 
+            --surface: #ffffff;
+            --text: #0f172a; 
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --success-bg: #dcfce7;
+            --success-text: #15803d;
+            --warning-bg: #fef9c3;
+            --warning-text: #a16207;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); 
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            --radius: 10px; 
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            line-height: 1.5; 
+            overflow-x: hidden; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container { 
+            max-width: 1440px; 
+            margin: 0 auto; 
+            padding: 2rem; 
+        }
+
+        /* Header */
+        header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 2rem; 
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .brand { display: flex; align-items: center; gap: 0.875rem; }
+        
+        .logo { 
+            width: 40px; height: 40px; 
+            background: linear-gradient(135deg, #0f172a, #334155); 
+            border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; 
+            color: white; font-weight: 700; font-size: 1.125rem; 
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        h1 { font-size: 1.25rem; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+
+        .header-actions { display: flex; align-items: center; gap: 1rem; }
+
+        /* Buttons */
+        .btn { 
+            padding: 0.5rem 1rem; 
+            border-radius: 6px; 
+            font-weight: 500; 
+            font-size: 0.875rem; 
+            cursor: pointer; 
+            transition: var(--transition); 
+            border: 1px solid transparent; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 0.5rem; 
+        }
+        
+        .btn:active { transform: scale(0.98); }
+
+        /* Professional Gray Theme */
+        .btn-primary {
+            background: #4d5156; color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background: #1a1c1e;
+            box-shadow: 0 4px 12px rgba(71, 85, 105, 0.2);
+        }
+
+        .btn-outline { 
+            background: var(--surface); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-outline:hover:not(:disabled) { 
+            background: #f8fafc; border-color: var(--border-hover); 
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; pointer-events: none; }
+        
+        /* Icon Button */
+        .btn-icon { 
+            width: 32px; height: 32px; 
+            border-radius: 6px; 
+            display: inline-flex; align-items: center; justify-content: center; 
+            background: #f1f5f9; color: var(--secondary); 
+            border: 1px solid transparent; cursor: pointer; transition: var(--transition); 
+        }
+        
+        .btn-icon:hover { 
+            background: #e2e8f0; color: #0f172a; 
+        }
+        
+        .btn-icon ion-icon { font-size: 1.125rem; }
+
+        /* Filter Bar */
+        .filter-card { 
+            background: var(--surface); 
+            padding: 1.25rem; 
+            border-radius: var(--radius); 
+            border: 1px solid var(--border); 
+            box-shadow: var(--shadow); 
+            margin-bottom: 2rem; 
+            display: flex; align-items: flex-end; gap: 1.25rem; flex-wrap: wrap;
+        }
+        
+        .filter-grid { display: flex; flex-wrap: wrap; gap: 1rem; flex: 1; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 0.375rem; flex: 1; min-width: 160px; }
+        
+        label { font-size: 0.75rem; font-weight: 600; color: var(--text-light); }
+
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper ion-icon { position: absolute; left: 0.75rem; color: #94a3b8; font-size: 1.125rem; }
+        
+        input { 
+            width: 100%;
+            padding: 0.5rem 0.75rem 0.5rem 2.25rem; 
+            border-radius: 6px; 
+            border: 1px solid var(--border); 
+            font-size: 0.875rem; 
+            color: var(--text);
+            outline: none; 
+            transition: border-color 0.2s ease; 
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        input:hover { border-color: var(--border-hover); }
+        input:focus { 
+            border-color: #94a3b8; /* Professional dark gray border, no glowing box-shadow */
+        }
+        input::placeholder { color: #cbd5e1; }
+
+        /* Action Bar */
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding: 0 0.25rem; }
+        .stats { font-size: 0.875rem; color: var(--text-light); }
+        .tip-text { font-size: 0.75rem; opacity: 0.7; font-style: italic; color: var(--text-light); }
+
+        /* Table */
+        .table-container { 
+            background: var(--surface); 
+            border-radius: var(--radius); 
+            border: 1px solid var(--border); 
+            box-shadow: var(--shadow); 
+            overflow-x: auto; 
+            scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;
+        }
+        
+        .table-container::-webkit-scrollbar { height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: transparent; }
+        .table-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+        
+        th { 
+            background: #f8fafc; 
+            padding: 0.875rem 1.25rem; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            color: #94a3b8; 
+            text-transform: uppercase; 
+            letter-spacing: 0.075em; 
+            border-bottom: 2px solid var(--border); 
+        }
+        
+        td { 
+            padding: 1rem 1.25rem; 
+            font-size: 0.875rem; 
+            border-bottom: 1px solid var(--border); 
+            vertical-align: middle; 
+            color: var(--text);
+        }
+        
+        /* Row Styles & Animations */
+        tbody tr { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        tbody tr:hover { 
+            background: #f8fafc; 
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            position: relative;
+            z-index: 10;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+
+        @keyframes fadeInRow { 
+            from { opacity: 0; transform: translateY(6px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* Formatting Specs */
+        .mono-text { font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; }
+        .text-right { text-align: right; }
+        .amount-cell { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--text); }
+
+        /* Badges */
+        .badge { 
+            padding: 0.25rem 0.625rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 500; 
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+        
+        .badge::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; }
+        
+        .badge-success { background: var(--success-bg); color: var(--success-text); }
+        .badge-success::before { background: currentColor; }
+        
+        .badge-warning { background: var(--warning-bg); color: var(--warning-text); }
+        .badge-warning::before { background: currentColor; }
+
+        /* Pagination */
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface); }
+        .pagination-controls { display: flex; gap: 0.5rem; }
+
+        /* Modal Preview */
+        #modalOverlay { 
+            position: fixed; inset: 0; 
+            background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); 
+            display: none; align-items: center; justify-content: center; 
+            z-index: 2000; padding: 2rem; 
+        }
+        
+        .modal-content { 
+            background: white; width: 100%; max-width: 900px; height: 85vh; 
+            border-radius: 12px; display: flex; flex-direction: column; 
+            overflow: hidden; box-shadow: var(--shadow-lg); 
+            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        
+        @keyframes modalIn { 
+            from { transform: scale(0.97) translateY(10px); opacity: 0; } 
+            to { transform: scale(1) translateY(0); opacity: 1; } 
+        }
+
+        .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { flex: 1; background: #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; background: white; }
+
+        /* Notification Toast (Professional Dark Theme) */
+        #notification { 
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            padding: 0.875rem 1.5rem; border-radius: 8px; /* Sharper border radius for a professional look */
+            color: #f8fafc; 
+            font-weight: 500; font-size: 0.875rem; z-index: 3000; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1); 
+            display: none; 
+            border: 1px solid #334155;
+            letter-spacing: 0.01em;
+        }
+        .toast-success { background: #1e293b; } /* Sleek Slate Gray */
+        .toast-error { background: #27272a; border-left: 4px solid #ef4444; color: #fecaca; border: 1px solid #3f3f46; } /* Subtle dark theme error */
+
+        /* Spinners & Loading States */
+        .spinner { 
+            width: 1.125rem; height: 1.125rem; 
+            border: 2px solid rgba(255,255,255,0.2); border-top-color: #ffffff; 
+            border-radius: 50%; animation: spin 0.8s linear infinite; 
+        }
+        .spinner.large { width: 2rem; height: 2rem; border-color: #cbd5e1; border-top-color: #475569; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+
+        /* Skeleton Loading Animation */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            height: 1.25rem;
+            width: 100%;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .empty-state {
+            text-align: center; padding: 4rem 2rem; color: var(--text-light);
+            display: flex; flex-direction: column; align-items: center; gap: 1rem;
+        }
+
+        /* Pulse Animation */
+        @keyframes softPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+        .pulse-icon {
+            animation: softPulse 2s infinite ease-in-out;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="brand">
+                <div class="logo">C</div>
+                <h1>ChequeFlow</h1>
+            </div>
+            <div class="header-actions">
+                <button id="syncBtn" class="btn btn-primary" onclick="triggerSync()">
+                    <span id="syncText">Sync from DB2</span>
+                    <div id="syncSpinner" class="spinner hidden"></div>
+                </button>
+                </div>
+        </header>
+
+        <section class="filter-card">
+            <div class="filter-grid">
+                <div class="input-group">
+                    <label>Cheque Number</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="search-outline"></ion-icon>
+                        <input type="text" id="filterCheque" placeholder="Search #" oninput="debounceFetch()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Payee Name</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="person-outline"></ion-icon>
+                        <input type="text" id="filterPayee" placeholder="Search Payee" oninput="debounceFetch()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>SSN Last 4</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="keypad-outline"></ion-icon>
+                        <input type="text" id="filterSsn" placeholder="Ex: 1234" maxlength="4" oninput="debounceFetch()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Date</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                        <input type="text" id="filterDate" placeholder="MM/DD/YYYY" oninput="debounceFetch()">
+                    </div>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-outline" onclick="resetFilters()">Clear Filters</button>
+            </div>
+        </section>
+
+        <section class="action-bar">
+            <div class="stats">
+                Found <span id="countTotal" style="font-weight: 600; color: var(--text);">0</span> records
+            </div>
+            <div class="tip-text">
+                Tip: Click any row to preview the cheque PDF
+            </div>
+        </section>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Cheque #</th>
+                        <th style="width: 10%;">Date</th>
+                        <th style="width: 10%;">SSN</th>
+                        <th style="width: 24%;">Payee Name</th>
+                        <th style="width: 12%;" class="text-right">Amount</th>
+                        <th style="width: 10%;">Claim #</th>
+                        <th style="width: 10%;">Bkcode</th>
+                        <th style="width: 17%;">Payee Address</th>
+                        <th style="width: 5%; text-align: center;">Download</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+            
+            <div class="pagination">
+                <div class="stats">Showing page <span id="currentPage" style="font-weight:600; color: var(--text);">1</span> of <span id="totalPages" style="font-weight:600; color: var(--text);">1</span></div>
+                <div class="pagination-controls">
+                    <button id="prevBtn" class="btn btn-outline" onclick="changePage(-1)" disabled>Previous</button>
+                    <button id="nextBtn" class="btn btn-outline" onclick="changePage(1)" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalTitle" style="font-size: 1.125rem; font-weight: 600; color: var(--text);">Cheque Preview</h2>
+                    <p id="modalSub" style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.25rem;"></p>
+                </div>
+                <button class="btn btn-outline" onclick="closeModal(event)">Close</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div id="modalLoader" class="spinner large"></div>
+                <iframe id="pdfFrame" class="hidden"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification"></div>
+
+    <script>
+        let currentPage = 1;
+        let debounceTimer;
+
+        // Skeleton Loading State
+        function setTableLoading() {
+            const tbody = document.getElementById('tableBody');
+            let skeletons = '';
+            for(let i=0; i<5; i++) {
+                skeletons += `
+                    <tr>
+                        <td><div class="skeleton" style="width: 80%"></div></td>
+                        <td><div class="skeleton" style="width: 90%"></div></td>
+                        <td><div class="skeleton" style="width: 60%"></div></td>
+                        <td><div class="skeleton"></div></td>
+                        <td><div class="skeleton" style="width: 70%; margin-left: auto;"></div></td>
+                        <td><div class="skeleton" style="width: 80%"></div></td>
+                        <td><div class="skeleton" style="width: 90%"></div></td>
+                        <td><div class="skeleton"></div></td>
+                        <td><div class="skeleton" style="width: 32px; height: 32px; border-radius: 6px; margin: 0 auto;"></div></td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = skeletons;
+        }
+
+        async function fetchCheques() {
+            setTableLoading();
+
+            const params = new URLSearchParams({
+                page: currentPage,
+                cheque_number: document.getElementById('filterCheque').value,
+                payee_name: document.getElementById('filterPayee').value,
+                ssn_last4: document.getElementById('filterSsn').value,
+                date: document.getElementById('filterDate').value
+            });
+
+            try {
+                // Simulate network delay for effect (Remove setTimeout in production!)
+                const response = await fetch(`/api/cheques?${params}`);
+                const data = await response.json();
+                renderTable(data);
+                updatePagination(data);
+            } catch (error) {
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state" style="color: var(--error);">
+                                <ion-icon name="warning-outline" class="pulse-icon" style="font-size: 2.5rem; color: #ef4444;"></ion-icon>
+                                <div>
+                                    <p style="font-weight: 500; color: var(--text);">Connection Error</p>
+                                    <p style="font-size: 0.875rem;">Could not connect to the data server. Please try again.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                showToast("Connection Error", "error");
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            if (!data.rows || data.rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <ion-icon name="search-outline" class="pulse-icon" style="font-size: 2.5rem; color: #cbd5e1;"></ion-icon>
+                                <div>
+                                    <p style="font-weight: 500; color: var(--text);">No Cheques Found</p>
+                                    <p style="font-size: 0.875rem;">Adjust your filters or sync with DB2 to see more results.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('countTotal').innerText = '0';
+                return;
+            }
+
+            data.rows.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                // Staggered fade in
+                tr.style.opacity = '0';
+                tr.style.animation = `fadeInRow 0.3s ease-out ${index * 0.05}s forwards`;
+                
+                tr.onclick = () => openModal(row);
+                
+                tr.innerHTML = `
+                    <td class="mono-text" style="font-weight: 500; color: #0f172a">#${row.cheque_number}</td>
+                    <td style="color: var(--text-light);">${row.date}</td>
+                    <td><span class="mono-text" style="color: var(--secondary); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">${row.ssn_masked}</span></td>
+                    <td style="font-weight: 500">${row.payee_name}</td>
+                    <td class="amount-cell text-right">$${parseFloat(row.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td style="color: var(--text-light);">${row.claim_number}</td>
+                    <td><span class="badge badge-warning">${row.bkcode}</span></td>
+                    <td title="${row.payee_address}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; color: var(--text-light);">${row.payee_address.replace(/\n/g, ', ')}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-icon" 
+                                onclick="downloadCheque(${row.id}, event)" 
+                                title="Download PDF">
+                            <ion-icon name="download-outline"></ion-icon>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('countTotal').innerText = data.total;
+        }
+
+        /* ACTIONS */
+
+        function openModal(row) {
+            const modal = document.getElementById('modalOverlay');
+            const frame = document.getElementById('pdfFrame');
+            const loader = document.getElementById('modalLoader');
+            
+            document.getElementById('modalTitle').innerText = `Cheque #${row.cheque_number}`;
+            document.getElementById('modalSub').innerText = `${row.payee_name} — $${parseFloat(row.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+            modal.style.display = 'flex';
+            loader.classList.remove('hidden');
+            frame.classList.add('hidden');
+
+            // Trigger reflow to restart animation
+            void modal.offsetWidth; 
+            modal.querySelector('.modal-content').style.animation = 'none';
+            modal.querySelector('.modal-content').style.animation = 'modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+
+            frame.src = `/api/cheques/${row.id}/preview`;
+            
+            frame.onload = () => {
+                loader.classList.add('hidden');
+                frame.classList.remove('hidden');
+            };
+        }
+
+        function closeModal(e) {
+            document.getElementById('modalOverlay').style.display = 'none';
+            document.getElementById('pdfFrame').src = ''; 
+        }
+
+        function downloadCheque(id, event) {
+            if (event) event.stopPropagation();
+            window.location.href = `/api/cheques/${id}/download`;
+            showToast("Starting Download ...", "success");
+        }
+
+        async function triggerSync() {
+            const btn = document.getElementById('syncBtn');
+            const text = document.getElementById('syncText');
+            const spinner = document.getElementById('syncSpinner');
+
+            btn.disabled = true;
+            text.classList.add('hidden');
+            spinner.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/sync', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(`Synced ${result.stats.synced} records`, "success");
+                    fetchCheques();
+                } else {
+                    showToast(result.error || "Sync Failed", "error");
+                }
+            } catch (e) {
+                showToast("Sync Failed: Connection lost", "error");
+            } finally {
+                btn.disabled = false;
+                text.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        /* HELPERS */
+
+        function updatePagination(data) {
+            document.getElementById('currentPage').innerText = data.page || 1;
+            document.getElementById('totalPages').innerText = data.total_pages || 1;
+            document.getElementById('prevBtn').disabled = !data.page || data.page === 1;
+            document.getElementById('nextBtn').disabled = !data.page || data.page >= data.total_pages;
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            fetchCheques();
+        }
+
+        function debounceFetch() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                currentPage = 1;
+                fetchCheques();
+            }, 300);
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('.filter-grid input').forEach(i => i.value = '');
+            currentPage = 1;
+            fetchCheques();
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('notification');
+            toast.innerText = message;
+            toast.className = `toast-${type}`;
+            toast.style.display = 'block';
+            
+            toast.style.animation = 'none';
+            void toast.offsetWidth; // Trigger reflow
+            toast.style.animation = 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            
+            window.toastTimeout = setTimeout(() => { 
+                toast.style.animation = 'slideUp 0.3s reverse forwards';
+                setTimeout(() => toast.style.display = 'none', 300);
+            }, 3000);
+        }
+
+        // Initialize
+        window.onload = fetchCheques;
+    </script>
+</body>
+</html>
