@@ -25,9 +25,17 @@ class ChequeGenerator:
     def generate(self, data):
         """
         Generates a full page PDF (Remittance Advice + Cheque).
+        Default filename based on cheque number.
         """
-        filename = os.path.join(self.output_dir, f"cheque_{data['cheque_number']}.pdf")
-        c = canvas.Canvas(filename, pagesize=letter)
+        filename = f"cheque_{data['cheque_number']}.pdf"
+        return self.generate_variant(data, filename)
+
+    def generate_variant(self, data, filename):
+        """
+        Generates a PDF with a specific filename.
+        """
+        full_path = os.path.join(self.output_dir, filename)
+        c = canvas.Canvas(full_path, pagesize=letter)
         
         # Draw Remittance Advice at the top
         self._draw_remittance_advice(c, data)
@@ -36,7 +44,7 @@ class ChequeGenerator:
         self._draw_cheque(c, data, offset_y=0)
         
         c.save()
-        return filename
+        return full_path
 
     def _draw_remittance_advice(self, c, data):
         """Draws the top 2/3 of the page (Voucher/Remittance Advice)"""
@@ -359,8 +367,10 @@ class ChequeGenerator:
 
         # --- DRAW SIGNATURE AT THE VERY END (For Visibility) ---
         sig_path = data.get('signature_path', '')
+        final_sig_data = None  # Safely initialize to prevent UnboundLocalError
+        
         if sig_path:
-            final_sig_path = None
+            final_sig_data = None # Reset technically not needed but safe
             
             # 1. Handle Remote URL (Google Drive etc.)
             if sig_path.startswith(('http://', 'https://')):
@@ -376,48 +386,8 @@ class ChequeGenerator:
                     
                     response = requests.get(sig_path, timeout=10)
                     response.raise_for_status()
-                    
-                    # PROCESS: Handle transparency for signature on white paper
-                    img_raw = Image.open(io.BytesIO(response.content)).convert('RGBA')
-                    
-                    # 1. Convert to grayscale to identify lightness
-                    gray = img_raw.convert('L')
-                    
-                    # 2. Invert to find the pen strokes (dark becomes light)
-                    inverted = ImageOps.invert(gray)
-                    
-                    # 3. Use the inverted grayscale as the alpha mask
-                    # This makes dark pen strokes more opaque and white paper transparent
-                    # Boost contrast to ensure strokes are sharp and background is cleared
-                    alpha_mask = inverted.point(lambda x: min(255, int(x * 2.4)))
-                    
-                    # 4. Apply the alpha mask directly to the original image
-                    # This preserves original colors (ink color) while making the paper transparent
-                    img_raw.putalpha(alpha_mask)
-                    img_transparent = img_raw
-                    
-                    # 5. Robust Crop to the signature itself
-                    bbox = alpha_mask.getbbox()
-                    if bbox:
-                        # Extra internal crop to remove edge artifacts (black pixels at corners)
-                        edge_trim = 20
-                        padding = 10
-                        img_cropped = img_transparent.crop((
-                            max(0, bbox[0] + edge_trim), 
-                            max(0, bbox[1] + edge_trim), 
-                            min(img_raw.width, bbox[2] - edge_trim), 
-                            min(img_raw.height, bbox[3] - edge_trim)
-                        ))
-                    else:
-                        img_cropped = img_transparent
-
-                    # Resize to reasonable width if needed
-                    if img_cropped.width > 1200:
-                        img_cropped = img_cropped.resize((1200, int(img_cropped.height * (1200 / img_cropped.width))), Image.LANCZOS)
-                    
-                    # Store as ImageReader for direct rendering
-                    # We keep it as RGBA to preserve transparency over the watermark
-                    final_sig_data = ImageReader(img_cropped)
+                    img_raw = Image.open(io.BytesIO(response.content))
+                    final_sig_data = self._process_signature_image(img_raw)
                 except Exception as e:
                     print(f"ERROR: Failed remote processing: {e}")
             
@@ -428,7 +398,8 @@ class ChequeGenerator:
                 path_to_use = abs_path if os.path.exists(abs_path) else sig_path
                 if os.path.exists(path_to_use):
                     try:
-                        final_sig_data = ImageReader(path_to_use)
+                        img_raw = Image.open(path_to_use)
+                        final_sig_data = self._process_signature_image(img_raw)
                     except Exception as e:
                         print(f"ERROR: Local signature load failed: {e}")
             
@@ -448,6 +419,61 @@ class ChequeGenerator:
 
         # Removed standalone save/return as this is now a helper method
         return
+
+    def _process_signature_image(self, img_raw):
+        """
+        Processes a signature image to remove the white background and crop it tightly.
+        Uses aggressive thresholding for a clean background-free result.
+        """
+        try:
+            # 1. Ensure RGBA
+            img_raw = img_raw.convert('RGBA')
+            
+            # 2. Extract Alpha Mask using strict thresholding
+            # Light pixels (paper) -> 0 alpha (transparent)
+            # Dark pixels (ink) -> 255 alpha (opaque)
+            gray = img_raw.convert('L')
+            
+            # Thresholding: If pixel is lighter than 220 (out of 255), it's background.
+            # Else, it's pen ink.
+            alpha_mask = gray.point(lambda x: 0 if x > 220 else 255)
+            
+            # 3. Apply Alpha Mask
+            # We also ensure the RGB channels are darkened to remove "halo" effects
+            # Create a solid-color ink layer (matching the general ink color of the original)
+            # For simplicity, we'll just keep the original pixels but with the new mask
+            img_raw.putalpha(alpha_mask)
+            
+            # 4. Crop tightly to the signature
+            bbox = alpha_mask.getbbox()
+            if bbox:
+                # 20px edge trim for extra safety as per the 'old code'
+                trim = 20
+                img_cropped = img_raw.crop((
+                    max(0, bbox[0] + trim), 
+                    max(0, bbox[1] + trim), 
+                    min(img_raw.width, bbox[2] - trim), 
+                    min(img_raw.height, bbox[3] - trim)
+                ))
+            else:
+                img_cropped = img_raw
+
+            # 5. Management: Keep width reasonable
+            if img_cropped.width > 1000:
+                img_cropped = img_cropped.resize(
+                    (1000, int(img_cropped.height * (1000 / img_cropped.width))), 
+                    Image.LANCZOS
+                )
+            
+            # 6. Stream as PNG to ReportLab
+            img_byte_arr = io.BytesIO()
+            img_cropped.save(img_byte_arr, format='PNG')
+            img_byte_arr.seek(0)
+            return ImageReader(img_byte_arr)
+            
+        except Exception as e:
+            print(f"ERROR in _process_signature_image: {e}")
+            return ImageReader(img_raw)
 
 if __name__ == "__main__":
     # Test generation   

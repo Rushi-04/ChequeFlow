@@ -92,7 +92,6 @@
         
         .btn:active { transform: scale(0.98); }
 
-        /* Professional Gray Theme */
         .btn-primary {
             background: #4d5156; color: white;
             box-shadow: var(--shadow-sm);
@@ -102,6 +101,11 @@
             background: #1a1c1e;
             box-shadow: 0 4px 12px rgba(71, 85, 105, 0.2);
         }
+
+        .btn-success {
+            background: var(--primary); color: white;
+        }
+        .btn-success:hover { background: var(--primary-hover); }
 
         .btn-outline { 
             background: var(--surface); 
@@ -114,23 +118,8 @@
             background: #f8fafc; border-color: var(--border-hover); 
         }
 
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; pointer-events: none; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; pointer-events: none; }
         
-        /* Icon Button */
-        .btn-icon { 
-            width: 32px; height: 32px; 
-            border-radius: 6px; 
-            display: inline-flex; align-items: center; justify-content: center; 
-            background: #f1f5f9; color: var(--secondary); 
-            border: 1px solid transparent; cursor: pointer; transition: var(--transition); 
-        }
-        
-        .btn-icon:hover { 
-            background: #e2e8f0; color: #0f172a; 
-        }
-        
-        .btn-icon ion-icon { font-size: 1.125rem; }
-
         /* Filter Bar */
         .filter-card { 
             background: var(--surface); 
@@ -151,9 +140,9 @@
         .input-wrapper { position: relative; display: flex; align-items: center; }
         .input-wrapper ion-icon { position: absolute; left: 0.75rem; color: #94a3b8; font-size: 1.125rem; }
         
-        input { 
+        input, select { 
             width: 100%;
-            padding: 0.5rem 0.75rem 0.5rem 2.25rem; 
+            padding: 0.5rem 0.75rem; 
             border-radius: 6px; 
             border: 1px solid var(--border); 
             font-size: 0.875rem; 
@@ -163,12 +152,10 @@
             background: var(--surface);
             box-shadow: var(--shadow-sm);
         }
+        input { padding-left: 2.25rem; }
         
-        input:hover { border-color: var(--border-hover); }
-        input:focus { 
-            border-color: #94a3b8; /* Professional dark gray border, no glowing box-shadow */
-        }
-        input::placeholder { color: #cbd5e1; }
+        input:hover, select:hover { border-color: var(--border-hover); }
+        input:focus, select:focus { border-color: #94a3b8; }
 
         /* Action Bar */
         .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding: 0 0.25rem; }
@@ -181,15 +168,10 @@
             border-radius: var(--radius); 
             border: 1px solid var(--border); 
             box-shadow: var(--shadow); 
-            overflow-x: auto; 
-            scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;
+            overflow: hidden;
         }
         
-        .table-container::-webkit-scrollbar { height: 8px; }
-        .table-container::-webkit-scrollbar-track { background: transparent; }
-        .table-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-
-        table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+        table { width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed; }
         
         th { 
             background: #f8fafc; 
@@ -208,28 +190,17 @@
             border-bottom: 1px solid var(--border); 
             vertical-align: middle; 
             color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
-        /* Row Styles & Animations */
         tbody tr { cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        tbody tr:hover { 
-            background: #f8fafc; 
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-            position: relative;
-            z-index: 10;
-        }
-        tbody tr:last-child td { border-bottom: none; }
-
-        @keyframes fadeInRow { 
-            from { opacity: 0; transform: translateY(6px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
+        tbody tr:hover { background: #f8fafc; transform: translateY(-1px); }
 
         /* Formatting Specs */
         .mono-text { font-family: 'JetBrains Mono', monospace; font-size: 0.8125rem; }
         .text-right { text-align: right; }
-        .amount-cell { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--text); }
 
         /* Badges */
         .badge { 
@@ -241,14 +212,8 @@
             align-items: center;
             gap: 0.375rem;
         }
-        
-        .badge::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; }
-        
         .badge-success { background: var(--success-bg); color: var(--success-text); }
-        .badge-success::before { background: currentColor; }
-        
         .badge-warning { background: var(--warning-bg); color: var(--warning-text); }
-        .badge-warning::before { background: currentColor; }
 
         /* Pagination */
         .pagination { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-top: 1px solid var(--border); background: var(--surface); }
@@ -263,7 +228,7 @@
         }
         
         .modal-content { 
-            background: white; width: 100%; max-width: 900px; height: 85vh; 
+            background: white; width: 100%; max-width: 1000px; height: 90vh; 
             border-radius: 12px; display: flex; flex-direction: column; 
             overflow: hidden; box-shadow: var(--shadow-lg); 
             animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
@@ -274,59 +239,39 @@
             to { transform: scale(1) translateY(0); opacity: 1; } 
         }
 
-        .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 1rem; }
+        .modal-title-row { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Toolbar */
+        .modal-toolbar { 
+            display: flex; align-items: center; gap: 0.75rem; 
+            background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);
+        }
+        .modal-toolbar select { max-width: 240px; }
+
         .modal-body { flex: 1; background: #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative; }
         iframe { width: 100%; height: 100%; border: none; background: white; }
 
-        /* Notification Toast (Professional Dark Theme) */
+        /* Notification Toast */
         #notification { 
             position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-            padding: 0.875rem 1.5rem; border-radius: 8px; /* Sharper border radius for a professional look */
-            color: #f8fafc; 
+            padding: 0.875rem 1.5rem; border-radius: 8px; color: #f8fafc; 
             font-weight: 500; font-size: 0.875rem; z-index: 3000; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1); 
-            display: none; 
-            border: 1px solid #334155;
-            letter-spacing: 0.01em;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2); 
+            display: none; transition: all 0.3s;
         }
-        .toast-success { background: #1e293b; } /* Sleek Slate Gray */
-        .toast-error { background: #27272a; border-left: 4px solid #ef4444; color: #fecaca; border: 1px solid #3f3f46; } /* Subtle dark theme error */
+        .toast-success { background: #1e293b; }
+        .toast-error { background: #ef4444; }
 
-        /* Spinners & Loading States */
-        .spinner { 
-            width: 1.125rem; height: 1.125rem; 
-            border: 2px solid rgba(255,255,255,0.2); border-top-color: #ffffff; 
-            border-radius: 50%; animation: spin 0.8s linear infinite; 
-        }
-        .spinner.large { width: 2rem; height: 2rem; border-color: #cbd5e1; border-top-color: #475569; }
+        /* Spinner */
+        .spinner { width: 1.125rem; height: 1.125rem; border: 2px solid rgba(255,255,255,0.2); border-top-color: #ffffff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .spinner.large { width: 2.5rem; height: 2.5rem; border-width: 3px; border-color: #cbd5e1; border-top-color: #475569; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
         .hidden { display: none !important; }
 
-        /* Skeleton Loading Animation */
-        .skeleton {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 4px;
-            height: 1.25rem;
-            width: 100%;
-        }
+        .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 1.25rem; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        .empty-state {
-            text-align: center; padding: 4rem 2rem; color: var(--text-light);
-            display: flex; flex-direction: column; align-items: center; gap: 1rem;
-        }
-
-        /* Pulse Animation */
-        @keyframes softPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-        }
-        .pulse-icon {
-            animation: softPulse 2s infinite ease-in-out;
-            display: inline-block;
-        }
     </style>
 </head>
 <body>
@@ -341,7 +286,7 @@
                     <span id="syncText">Sync from DB2</span>
                     <div id="syncSpinner" class="spinner hidden"></div>
                 </button>
-                </div>
+            </div>
         </header>
 
         <section class="filter-card">
@@ -375,9 +320,7 @@
                     </div>
                 </div>
             </div>
-            <div class="filter-actions">
-                <button class="btn btn-outline" onclick="resetFilters()">Clear Filters</button>
-            </div>
+            <button class="btn btn-outline" onclick="resetFilters()">Clear Filters</button>
         </section>
 
         <section class="action-bar">
@@ -396,16 +339,14 @@
                         <th style="width: 12%;">Cheque #</th>
                         <th style="width: 10%;">Date</th>
                         <th style="width: 10%;">SSN</th>
-                        <th style="width: 24%;">Payee Name</th>
-                        <th style="width: 12%;" class="text-right">Amount</th>
-                        <th style="width: 10%;">Claim #</th>
-                        <th style="width: 10%;">Bkcode</th>
-                        <th style="width: 17%;">Payee Address</th>
-                        <th style="width: 5%; text-align: center;">Download</th>
+                        <th style="width: 25%;">Payee Name</th>
+                        <th style="width: 13%;" class="text-right">Amount</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 8%;">Bkcode</th>
+                        <th>Payee Address</th>
                     </tr>
                 </thead>
-                <tbody id="tableBody">
-                    </tbody>
+                <tbody id="tableBody"></tbody>
             </table>
             
             <div class="pagination">
@@ -418,14 +359,38 @@
         </div>
     </div>
 
+    <!-- Modal Preview Enhancement -->
     <div id="modalOverlay" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <div>
-                    <h2 id="modalTitle" style="font-size: 1.125rem; font-weight: 600; color: var(--text);">Cheque Preview</h2>
-                    <p id="modalSub" style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.25rem;"></p>
+                <div class="modal-title-row">
+                    <div>
+                        <h2 id="modalTitle" style="font-size: 1.125rem; font-weight: 600; color: var(--text);">Cheque Preview</h2>
+                        <p id="modalSub" style="font-size: 0.875rem; color: var(--text-light); margin-top: 0.25rem;"></p>
+                    </div>
+                    <button class="btn btn-outline" onclick="closeModal(event)">Close</button>
                 </div>
-                <button class="btn btn-outline" onclick="closeModal(event)">Close</button>
+                
+                <div class="modal-toolbar">
+                    <ion-icon name="create-outline" style="color: var(--secondary)"></ion-icon>
+                    <select id="sigDropdown" onchange="onSigChange()">
+                        <option value="">-- Select Signature --</option>
+                    </select>
+                    <button id="btnPreviewSigned" class="btn btn-outline" onclick="previewSigned()" disabled>
+                        Preview Signed
+                    </button>
+                    <button id="btnCancelSig" class="btn btn-outline" onclick="cancelSig()">
+                        Cancel
+                    </button>
+                    <div style="flex: 1"></div>
+                    <button id="btnApprove" class="btn btn-success" onclick="approveCheque()" disabled>
+                        Approve
+                    </button>
+                    <button id="btnDownload" class="btn btn-primary" onclick="downloadCheque()">
+                        <ion-icon name="download-outline"></ion-icon>
+                        Download
+                    </button>
+                </div>
             </div>
             <div class="modal-body" id="modalBody">
                 <div id="modalLoader" class="spinner large"></div>
@@ -439,32 +404,38 @@
     <script>
         let currentPage = 1;
         let debounceTimer;
+        let signatures = [];
+        let currentChequeId = null;
+        let tempSignatureId = null;
 
-        // Skeleton Loading State
+        async function init() {
+            try {
+                const response = await fetch('/api/signatures');
+                signatures = await response.json();
+                const dropdown = document.getElementById('sigDropdown');
+                signatures.forEach(sig => {
+                    const opt = document.createElement('option');
+                    opt.value = sig.id;
+                    opt.textContent = sig.name;
+                    dropdown.appendChild(opt);
+                });
+            } catch (e) {
+                console.error("Failed to load signatures", e);
+            }
+            fetchCheques();
+        }
+
         function setTableLoading() {
             const tbody = document.getElementById('tableBody');
             let skeletons = '';
-            for(let i=0; i<5; i++) {
-                skeletons += `
-                    <tr>
-                        <td><div class="skeleton" style="width: 80%"></div></td>
-                        <td><div class="skeleton" style="width: 90%"></div></td>
-                        <td><div class="skeleton" style="width: 60%"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton" style="width: 70%; margin-left: auto;"></div></td>
-                        <td><div class="skeleton" style="width: 80%"></div></td>
-                        <td><div class="skeleton" style="width: 90%"></div></td>
-                        <td><div class="skeleton"></div></td>
-                        <td><div class="skeleton" style="width: 32px; height: 32px; border-radius: 6px; margin: 0 auto;"></div></td>
-                    </tr>
-                `;
+            for(let i=0; i<8; i++) {
+                skeletons += `<tr><td><div class="skeleton"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton"></div></td></tr>`;
             }
             tbody.innerHTML = skeletons;
         }
 
         async function fetchCheques() {
             setTableLoading();
-
             const params = new URLSearchParams({
                 page: currentPage,
                 cheque_number: document.getElementById('filterCheque').value,
@@ -472,28 +443,12 @@
                 ssn_last4: document.getElementById('filterSsn').value,
                 date: document.getElementById('filterDate').value
             });
-
             try {
-                // Simulate network delay for effect (Remove setTimeout in production!)
                 const response = await fetch(`/api/cheques?${params}`);
                 const data = await response.json();
                 renderTable(data);
                 updatePagination(data);
             } catch (error) {
-                const tbody = document.getElementById('tableBody');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9">
-                            <div class="empty-state" style="color: var(--error);">
-                                <ion-icon name="warning-outline" class="pulse-icon" style="font-size: 2.5rem; color: #ef4444;"></ion-icon>
-                                <div>
-                                    <p style="font-weight: 500; color: var(--text);">Connection Error</p>
-                                    <p style="font-size: 0.875rem;">Could not connect to the data server. Please try again.</p>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
                 showToast("Connection Error", "error");
             }
         }
@@ -501,122 +456,135 @@
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            
             if (!data.rows || data.rows.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9">
-                            <div class="empty-state">
-                                <ion-icon name="search-outline" class="pulse-icon" style="font-size: 2.5rem; color: #cbd5e1;"></ion-icon>
-                                <div>
-                                    <p style="font-weight: 500; color: var(--text);">No Cheques Found</p>
-                                    <p style="font-size: 0.875rem;">Adjust your filters or sync with DB2 to see more results.</p>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                document.getElementById('countTotal').innerText = '0';
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 4rem; color: var(--text-light)">No cheques found.</td></tr>`;
                 return;
             }
-
-            data.rows.forEach((row, index) => {
+            data.rows.forEach(row => {
                 const tr = document.createElement('tr');
-                // Staggered fade in
-                tr.style.opacity = '0';
-                tr.style.animation = `fadeInRow 0.3s ease-out ${index * 0.05}s forwards`;
-                
                 tr.onclick = () => openModal(row);
-                
+                const statusBadge = row.is_approved ? '<span class="badge badge-success">Approved</span>' : '<span class="badge badge-warning">Unsigned</span>';
                 tr.innerHTML = `
-                    <td class="mono-text" style="font-weight: 500; color: #0f172a">#${row.cheque_number}</td>
+                    <td class="mono-text" style="font-weight: 500;">#${row.cheque_number}</td>
                     <td style="color: var(--text-light);">${row.date}</td>
-                    <td><span class="mono-text" style="color: var(--secondary); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">${row.ssn_masked}</span></td>
+                    <td><span class="mono-text" style="color: var(--secondary); background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${row.ssn_masked}</span></td>
                     <td style="font-weight: 500">${row.payee_name}</td>
-                    <td class="amount-cell text-right">$${parseFloat(row.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td style="color: var(--text-light);">${row.claim_number}</td>
-                    <td><span class="badge badge-warning">${row.bkcode}</span></td>
-                    <td title="${row.payee_address}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; color: var(--text-light);">${row.payee_address.replace(/\n/g, ', ')}</td>
-                    <td style="text-align: center;">
-                        <button class="btn-icon" 
-                                onclick="downloadCheque(${row.id}, event)" 
-                                title="Download PDF">
-                            <ion-icon name="download-outline"></ion-icon>
-                        </button>
-                    </td>
+                    <td class="text-right mono-text">$${parseFloat(row.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td>${statusBadge}</td>
+                    <td>${row.bkcode}</td>
+                    <td style="color: var(--text-light);">${row.payee_address.replace(/\n/g, ', ')}</td>
                 `;
                 tbody.appendChild(tr);
             });
-
             document.getElementById('countTotal').innerText = data.total;
         }
 
-        /* ACTIONS */
+        /* MODAL ACTIONS */
 
         function openModal(row) {
-            const modal = document.getElementById('modalOverlay');
-            const frame = document.getElementById('pdfFrame');
-            const loader = document.getElementById('modalLoader');
+            currentChequeId = row.id;
+            tempSignatureId = null;
+            document.getElementById('sigDropdown').value = "";
+            document.getElementById('btnPreviewSigned').disabled = true;
+            document.getElementById('btnApprove').disabled = true;
             
             document.getElementById('modalTitle').innerText = `Cheque #${row.cheque_number}`;
             document.getElementById('modalSub').innerText = `${row.payee_name} — $${parseFloat(row.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 
-            modal.style.display = 'flex';
+            document.getElementById('modalOverlay').style.display = 'flex';
+            loadPreview();
+        }
+
+        function loadPreview(sigId = null) {
+            const frame = document.getElementById('pdfFrame');
+            const loader = document.getElementById('modalLoader');
             loader.classList.remove('hidden');
             frame.classList.add('hidden');
-
-            // Trigger reflow to restart animation
-            void modal.offsetWidth; 
-            modal.querySelector('.modal-content').style.animation = 'none';
-            modal.querySelector('.modal-content').style.animation = 'modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-
-            frame.src = `/api/cheques/${row.id}/preview`;
             
+            let url = `/api/cheques/${currentChequeId}/preview`;
+            if (sigId) url += `?signature_id=${sigId}`;
+            
+            frame.src = url;
             frame.onload = () => {
                 loader.classList.add('hidden');
                 frame.classList.remove('hidden');
             };
         }
 
-        function closeModal(e) {
-            document.getElementById('modalOverlay').style.display = 'none';
-            document.getElementById('pdfFrame').src = ''; 
+        function onSigChange() {
+            const val = document.getElementById('sigDropdown').value;
+            tempSignatureId = val ? parseInt(val) : null;
+            document.getElementById('btnPreviewSigned').disabled = !val;
+            document.getElementById('btnApprove').disabled = !val;
         }
 
-        function downloadCheque(id, event) {
-            if (event) event.stopPropagation();
-            window.location.href = `/api/cheques/${id}/download`;
+        function previewSigned() {
+            if (tempSignatureId) loadPreview(tempSignatureId);
+        }
+
+        function cancelSig() {
+            tempSignatureId = null;
+            document.getElementById('sigDropdown').value = "";
+            onSigChange();
+            loadPreview(); // Reverts to default (unsigned or previously approved)
+        }
+
+        async function approveCheque() {
+            if (!tempSignatureId) return;
+            try {
+                const response = await fetch(`/api/cheques/${currentChequeId}/approve`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ signature_id: tempSignatureId })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast("Approved Successfully", "success");
+                    fetchCheques(); // Update table background
+                } else {
+                    showToast(result.detail, "error");
+                }
+            } catch (e) {
+                showToast("Approval failed", "error");
+            }
+        }
+
+        function downloadCheque() {
+            let url = `/api/cheques/${currentChequeId}/download`;
+            if (tempSignatureId) url += `?signature_id=${tempSignatureId}`;
+            window.location.href = url;
             showToast("Starting Download ...", "success");
         }
+
+        function closeModal(e) {
+            document.getElementById('modalOverlay').style.display = 'none';
+            document.getElementById('pdfFrame').src = '';
+            currentChequeId = null;
+        }
+
+        /* SYNC AND PAGINATION */
 
         async function triggerSync() {
             const btn = document.getElementById('syncBtn');
             const text = document.getElementById('syncText');
-            const spinner = document.getElementById('syncSpinner');
-
             btn.disabled = true;
             text.classList.add('hidden');
-            spinner.classList.remove('hidden');
-
+            document.getElementById('syncSpinner').classList.remove('hidden');
             try {
-                const response = await fetch('/api/sync', { method: 'POST' });
-                const result = await response.json();
-                if (result.success) {
-                    showToast(`Synced ${result.stats.synced} records`, "success");
+                const res = await fetch('/api/sync', { method: 'POST' });
+                const r = await res.json();
+                if (r.success) {
+                    showToast(`Synced ${r.stats.synced} records`, "success");
                     fetchCheques();
-                } else {
-                    showToast(result.error || "Sync Failed", "error");
                 }
             } catch (e) {
-                showToast("Sync Failed: Connection lost", "error");
+                showToast("Sync Failed", "error");
             } finally {
                 btn.disabled = false;
                 text.classList.remove('hidden');
-                spinner.classList.add('hidden');
+                document.getElementById('syncSpinner').classList.add('hidden');
             }
         }
-
-        /* HELPERS */
 
         function updatePagination(data) {
             document.getElementById('currentPage').innerText = data.page || 1;
@@ -625,45 +593,20 @@
             document.getElementById('nextBtn').disabled = !data.page || data.page >= data.total_pages;
         }
 
-        function changePage(delta) {
-            currentPage += delta;
-            fetchCheques();
-        }
-
-        function debounceFetch() {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                currentPage = 1;
-                fetchCheques();
-            }, 300);
-        }
-
-        function resetFilters() {
-            document.querySelectorAll('.filter-grid input').forEach(i => i.value = '');
-            currentPage = 1;
-            fetchCheques();
-        }
+        function changePage(delta) { currentPage += delta; fetchCheques(); }
+        function debounceFetch() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { currentPage = 1; fetchCheques(); }, 300); }
+        function resetFilters() { document.querySelectorAll('.filter-grid input').forEach(i => i.value = ''); currentPage = 1; fetchCheques(); }
 
         function showToast(message, type) {
             const toast = document.getElementById('notification');
             toast.innerText = message;
             toast.className = `toast-${type}`;
             toast.style.display = 'block';
-            
-            toast.style.animation = 'none';
-            void toast.offsetWidth; // Trigger reflow
-            toast.style.animation = 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-
             if (window.toastTimeout) clearTimeout(window.toastTimeout);
-            
-            window.toastTimeout = setTimeout(() => { 
-                toast.style.animation = 'slideUp 0.3s reverse forwards';
-                setTimeout(() => toast.style.display = 'none', 300);
-            }, 3000);
+            window.toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 3000);
         }
 
-        // Initialize
-        window.onload = fetchCheques;
+        window.onload = init;
     </script>
 </body>
 </html>

@@ -1,69 +1,157 @@
 import sqlite3
 import os
+from datetime import datetime
 
 class SqliteService:
     def __init__(self, db_path):
         self.db_path = db_path
 
-    def _get_conn(self):
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
+    def _get_connection(self):
+        return sqlite3.connect(self.db_path)
 
     def get_cheques(self, page=1, page_size=10, filters=None):
-        conn = self._get_conn()
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
         offset = (page - 1) * page_size
+        
         query = "SELECT * FROM cheques WHERE 1=1"
         params = []
-
+        
         if filters:
-            if filters.get('cheque_number'):
+            if filters.get("cheque_number"):
                 query += " AND cheque_number LIKE ?"
                 params.append(f"%{filters['cheque_number']}%")
-            if filters.get('payee_name'):
-                query += " AND payee_name COLLATE NOCASE LIKE ?"
+            if filters.get("payee_name"):
+                query += " AND payee_name LIKE ?"
                 params.append(f"%{filters['payee_name']}%")
-            if filters.get('ssn_last4'):
+            if filters.get("ssn_last4"):
                 query += " AND ssn LIKE ?"
                 params.append(f"%{filters['ssn_last4']}")
-            if filters.get('date'):
+            if filters.get("date"):
                 query += " AND date LIKE ?"
                 params.append(f"%{filters['date']}%")
-
-        # Total count for pagination
-        count_query = query.replace("SELECT *", "SELECT COUNT(*)")
+        
+        # Get total count for pagination
+        count_query = f"SELECT COUNT(*) FROM ({query})"
         cursor.execute(count_query, params)
         total_count = cursor.fetchone()[0]
-
-        # Fetch page
+        
+        # Get paginated rows
         query += " ORDER BY id DESC LIMIT ? OFFSET ?"
         params.extend([page_size, offset])
         
         cursor.execute(query, params)
         rows = cursor.fetchall()
         
-        # Process rows (mask SSN)
-        results = []
+        processed_rows = []
         for row in rows:
             d = dict(row)
+            # Mask SSN for overview
             ssn = d.get('ssn', '')
-            d['ssn_masked'] = "XXXXX" + ssn[-4:] if len(ssn) >= 4 else ssn
-            d.pop('ssn', None) # Security: remove full SSN from API response
-            results.append(d)
-
+            d['ssn_masked'] = "XXXXX" + ssn[-4:] if ssn and len(ssn) >= 4 else ssn
+            # Remove full ssn from overview for security
+            del d['ssn']
+            processed_rows.append(d)
+            
         conn.close()
-        return results, total_count
+        return processed_rows, total_count
 
     def get_full_data_by_ids(self, ids):
-        """Used by the generator service to get FULL data including SSN"""
-        conn = self._get_conn()
+        if not ids:
+            return []
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        placeholders = ",".join(["?"] * len(ids))
+        placeholders = ','.join(['?'] * len(ids))
         query = f"SELECT * FROM cheques WHERE id IN ({placeholders})"
         cursor.execute(query, ids)
-        rows = cursor.fetchall()
+        rows = [dict(r) for r in cursor.fetchall()]
         conn.close()
-        return [dict(row) for row in rows]
+        return rows
+
+    def upsert_cheques(self, cheque_data_list):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        synced_count = 0
+        for data in cheque_data_list:
+            # Check for existing
+            cursor.execute("SELECT id FROM cheques WHERE cheque_number = ?", (data['cheque_number'],))
+            exists = cursor.fetchone()
+            
+            # Prepare columns and values dynamically based on data dict
+            columns = ', '.join(data.keys())
+            placeholders = ', '.join(['?'] * len(data))
+            values = list(data.values())
+            
+            if exists:
+                # Update existing (keep existing approval state)
+                update_placeholders = ', '.join([f"{k} = ?" for k in data.keys()])
+                query = f"UPDATE cheques SET {update_placeholders} WHERE cheque_number = ?"
+                cursor.execute(query, values + [data['cheque_number']])
+            else:
+                # Insert new
+                query = f"INSERT INTO cheques ({columns}) VALUES ({placeholders})"
+                cursor.execute(query, values)
+            
+            synced_count += 1
+            
+        conn.commit()
+        conn.close()
+        return synced_count
+
+    # --- New Signature & Approval Methods ---
+
+    def get_signatures(self):
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM signatures ORDER BY name ASC")
+        rows = [dict(r) for r in cursor.fetchall()]
+        conn.close()
+        return rows
+
+    def get_signature_by_id(self, sig_id):
+        conn = self._get_connection()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM signatures WHERE id = ?", (sig_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def approve_cheque(self, cheque_id, signature_id):
+        sig = self.get_signature_by_id(signature_id)
+        if not sig:
+            return False, "Signature not found"
+            
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        query = """
+            UPDATE cheques 
+            SET approved_signature_id = ?, 
+                approved_by_name = ?, 
+                approved_signature_path = ?, 
+                is_approved = 1, 
+                approved_at = ?
+            WHERE id = ?
+        """
+        cursor.execute(query, (
+            sig['id'],
+            sig['name'],
+            sig['signature_path'],
+            now,
+            cheque_id
+        ))
+        
+        success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        
+        return success, "Approved successfully" if success else "Cheque not found"
